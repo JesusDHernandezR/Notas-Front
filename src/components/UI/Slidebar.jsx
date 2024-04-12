@@ -1,13 +1,20 @@
 import React, { useState } from "react";
-import { FaArrowLeftLong, FaArrowRightLong } from "react-icons/fa6";
+import { FaArrowLeftLong, FaArrowRightLong, FaPlus } from "react-icons/fa6";
 import { RiLogoutBoxLine } from "react-icons/ri";
+import Profile from "../Profile";
+import { useAuth0 } from "@auth0/auth0-react";
+import CategoryButton from "../CategoriaBoton";
+import NotesPanel from "../NotasPanel";
+import ContenidoNotas from "../ContenidoNotas";
 
-const Sidebar = () => {
+const Sidebar = ({ notes, setNotes }) => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedNote, setSelectedNote] = useState(null);
   const [categories, setCategories] = useState(["Categoría 1", "Categoría 2"]);
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+  const { logout } = useAuth0();
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
@@ -15,7 +22,13 @@ const Sidebar = () => {
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
-    setAddingCategory(false); // Ocultar el input al seleccionar una categoría existente
+    setAddingCategory(false);
+    // Al seleccionar una categoría, también restablecer la nota seleccionada
+    setSelectedNote(null);
+  };
+
+  const handleNoteSelect = (note) => {
+    setSelectedNote(note);
   };
 
   const handleNewCategoryChange = (e) => {
@@ -26,32 +39,34 @@ const Sidebar = () => {
     if (newCategory.trim() !== "") {
       setCategories([...categories, newCategory.trim()]);
       setNewCategory("");
-      setAddingCategory(false); // Ocultar el input después de agregar una nueva categoría
+      setAddingCategory(false);
     }
+  };
+
+  const getNoteCountByCategory = (category) => {
+    return notes.filter((note) => note.category === category).length;
+  };
+
+  const handleUpdateNote = (updatedNote) => {
+    const updatedNotes = notes.map((note) =>
+      note === selectedNote ? updatedNote : note
+    );
+    setNotes(updatedNotes);
+    setSelectedNote(updatedNote);
   };
 
   return (
     <div className="h-screen flex">
       {/* Sidebar */}
       <div
-        className={`bg-gray-900 text-white w-64 ${
+        className={`bg-gray-900 text-white w-64 overflow-y-auto relative ${
           showSidebar ? "block" : "hidden"
         }`}
       >
-        <div className="p-4    ">
-          <div className="flex">
-            <img
-              src="https://www.shutterstock.com/image-vector/blank-avatar-photo-place-holder-600nw-1095249842.jpg"
-              alt="Profile"
-              className="rounded-full w-10"
-            />
-            <h1 className="text-base font-semibold content-center ml-2">
-              Jhonnier José Guzmán
-            </h1>
-          </div>
-
+        <div className="p-4 mb-72">
+          <Profile />
           <div>
-            <div className="flex">
+            <div className="flex justify-between items-center">
               <button
                 className={`mt-4 py-2 px-4 rounded-md w-full ${
                   selectedOption === "Categorías" ? "" : ""
@@ -60,14 +75,15 @@ const Sidebar = () => {
               >
                 Categorías
               </button>
-              <span
-                className="ml-2 cursor-pointer content-center mt-3"
-                onClick={() => setAddingCategory(!addingCategory)}
-              >
-                +
-              </span>
+              <div className="relative">
+                <span
+                  className="ml-2 cursor-pointer content-center mt-3 bg-gray-500 rounded-full w-8 h-8 flex justify-center items-center"
+                  onClick={() => setAddingCategory(!addingCategory)}
+                >
+                  <FaPlus size={13} />
+                </span>
+              </div>
             </div>
-
             {addingCategory && (
               <div className="mt-2">
                 <input
@@ -85,36 +101,53 @@ const Sidebar = () => {
                 </button>
               </div>
             )}
-            <div className="overflow-y-auto max-h-96 mb-3 w-full">
+            <div className="overflow-y-auto max-h-40">
               {categories.map((category, index) => (
-                <button
+                <CategoryButton
                   key={index}
-                  className={`mt-2 py-2 px-4 rounded-md w-full ${
-                    selectedOption === category
-                      ? " border-l-4 border-white"
-                      : ""
-                  }`}
+                  category={category}
+                  isSelected={selectedOption === category}
                   onClick={() => handleOptionSelect(category)}
-                >
-                  {category}
-                </button>
+                  noteCount={getNoteCountByCategory(category)}
+                />
               ))}
             </div>
           </div>
         </div>
-        <div className="mt-4 text-white py-2 px-4 rounded-md w-full flex justify-center">
+        <div
+          className="mt-4 text-white py-2 px-4 rounded-md w-full flex justify-center cursor-pointer"
+          onClick={() => logout()}
+        >
           <RiLogoutBoxLine className="mt-1" />
           <span>Logout</span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 bg-gray-800">
-        {/* Button to toggle sidebar */}
-        <div className=" text-white p-2" onClick={toggleSidebar}>
+      {/* Superponer flechas */}
+      <div className="absolute top-0 right-0 mt-2 mr-2">
+        <div className="  p-2" onClick={toggleSidebar}>
           {showSidebar ? <FaArrowLeftLong /> : <FaArrowRightLong />}
         </div>
-        {/* Content goes here */}
+      </div>
+
+      {/* Content */}
+      {showSidebar && (
+        <div className="flex-1 bg-gray-800 max-w-56">
+          {/* Notes */}
+          <NotesPanel
+            notes={notes}
+            setNotes={setNotes}
+            selectedOption={selectedOption}
+            onNoteSelect={handleNoteSelect} // Pasar la función para manejar la selección de notas
+          />
+        </div>
+      )}
+
+      <div className="flex-1 bg-gray-100 p-4">
+        <ContenidoNotas
+          selectedNote={selectedNote}
+          onUpdateNote={handleUpdateNote}
+        />
       </div>
     </div>
   );
