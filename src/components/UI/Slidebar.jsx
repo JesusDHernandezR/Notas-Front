@@ -43,8 +43,8 @@ const Sidebar = ({ notes, setNotes }) => {
     }
   };
 
-  const getNoteCountByCategory = (category) => {
-    return notes.filter((note) => note.category === category).length;
+  const getNoteCountByCategory = (categoria) => {
+    return notes.filter((note) => note.categoria === categoria).length;
   };
 
   const handleUpdateNote = (updatedNote) => {
@@ -102,13 +102,13 @@ const Sidebar = ({ notes, setNotes }) => {
               </div>
             )}
             <div className="overflow-y-auto max-h-40">
-              {categories.map((category, index) => (
+              {categories.map((categoria, index) => (
                 <CategoryButton
                   key={index}
-                  category={category}
-                  isSelected={selectedOption === category}
-                  onClick={() => handleOptionSelect(category)}
-                  noteCount={getNoteCountByCategory(category)}
+                  category={categoria}
+                  isSelected={selectedOption === categoria}
+                  onClick={() => handleOptionSelect(categoria)}
+                  noteCount={getNoteCountByCategory(categoria)}
                 />
               ))}
             </div>

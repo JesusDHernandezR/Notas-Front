@@ -1,39 +1,49 @@
 import React, { useState } from "react";
+import { actualizarNotas } from "../services/notasServices";
+import { formatoFecha } from "../utils/utils";
 
 function ContenidoNotas({ selectedNote, onUpdateNote }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
 
-  // Actualiza los estados de título y contenido al seleccionar una nueva nota
   React.useEffect(() => {
     if (selectedNote) {
-      setEditedTitle(selectedNote.title);
-      setEditedContent(selectedNote.content);
+      setEditedTitle(selectedNote.titulo);
+      setEditedContent(selectedNote.descripcion);
     }
   }, [selectedNote]);
 
-  // Maneja el cambio en el título
   const handleTitleChange = (e) => {
     setEditedTitle(e.target.value);
   };
 
-  // Maneja el cambio en el contenido
   const handleContentChange = (e) => {
     setEditedContent(e.target.value);
   };
 
-  // Maneja el clic en el botón de guardar
-  const handleSaveNote = () => {
-    onUpdateNote({
-      ...selectedNote,
-      title: editedTitle,
-      content: editedContent,
-    });
-    setIsEditing(false); // Finaliza la edición al guardar
+  const handleSaveNote = async () => {
+    try {
+      await actualizarNotas(selectedNote.id, {
+        ...selectedNote,
+        titulo: editedTitle,
+        descripcion: editedContent,
+      });
+
+      onUpdateNote({
+        ...selectedNote,
+        titulo: editedTitle,
+        descripcion: editedContent,
+      });
+
+      setIsEditing(false); 
+    } catch (error) {
+      console.error("Error al actualizar la nota:", error);
+      
+    }
   };
 
-  // Renderiza la vista de edición si isEditing es verdadero
+
   if (isEditing) {
     return (
       <div className="bg-gray-100 rounded-md p-4 mb-4">
@@ -67,7 +77,7 @@ function ContenidoNotas({ selectedNote, onUpdateNote }) {
     );
   }
 
-  // Renderiza la vista de visualización si no se está editando
+
   return (
     <>
       {selectedNote ? (
@@ -75,9 +85,9 @@ function ContenidoNotas({ selectedNote, onUpdateNote }) {
           className="bg-gray-100 rounded-md p-4 mb-4"
           onClick={() => setIsEditing(true)}
         >
-          <p className="text-gray-400 mb-2">{selectedNote.creationDate}</p>
-          <h3 className="text-lg font-semibold mb-2">{selectedNote.title}</h3>
-          <p className="text-gray-400">{selectedNote.content}</p>
+          <p className="text-gray-400 mb-2">{formatoFecha(selectedNote.fecha)}</p>
+          <h3 className="text-lg font-semibold mb-2">{selectedNote.titulo}</h3>
+          <p className="text-gray-400">{selectedNote.descripcion}</p>
         </div>
       ) : (
         <div>Bienvenido</div>

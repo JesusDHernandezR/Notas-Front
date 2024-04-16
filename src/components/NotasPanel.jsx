@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FaTrash } from "react-icons/fa";
-import { crearNotas } from "../services/notasServices";
+import { crearNotas, eliminarNotas } from "../services/notasServices";
 import { toast } from "react-toastify";
-import Joi from "joi";
+import { formatoFecha } from "../utils/utils";
 
 
 const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
@@ -13,13 +13,12 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
     fecha: new Date().toISOString(),
   });
   const [showInputs, setShowInputs] = useState(false);
-  const [newNoteTitle, setNewNoteTitle] = useState("");
-  const [newNoteContent, setNewNoteContent] = useState("");
+
 console.log(selectedOption)
 console.log(new Date().toISOString())
 useEffect(()=>{
 setNota({
-  id:notes.length,
+  id:0,
   titulo: "",
     descripcion: "",
     categoria: selectedOption,
@@ -27,23 +26,6 @@ setNota({
 })
 },[selectedOption])
 
-
- 
-  const handleAddNote = () => {
-    if (newNoteTitle.trim() !== "" && newNoteContent.trim() !== "") {
-      const newNote = {
-        id:notes.length,
-        descripcion: selectedOption,
-        title: newNoteTitle,
-        descripcion: newNoteContent,
-        creationDate: new Date().toLocaleString(),
-      };
-      setNotes([...notes, newNote]);
-      setNewNoteTitle("");
-      setNewNoteContent("");
-      setShowInputs(false);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,7 +39,6 @@ setNota({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar datos con Joi
     const { error } = (notes, { abortEarly: false });
 
     if (error) {
@@ -66,25 +47,35 @@ setNota({
     }
 
     try {
-      // Llama a la función del servicio para enviar la solicitud POST
       await crearNotas(nota);
-
+      
       toast.success("Nota creado con éxito");
       console.log("nota creado");
-      
+      window.location.reload()
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
       toast.error("Error al crear el nota");
-      // Manejar los errores según sea necesario
     }
   };
 
-  const handleDeleteNote = (index) => {
-    const newNotes = [...notes];
-    newNotes.splice(index, 1);
-    setNotes(newNotes);
+  const handleDeleteNote = async (id) => {
+    try {
+      await eliminarNotas(id); // Llama a la función para eliminar la nota
+      const newNotes = notes.filter((note) => note.id !== id); // Filtra las notas para eliminar la nota eliminada
+      setNotes(newNotes); // Actualiza el estado de las notas
+      toast.success("Nota eliminada con éxito");
+    } catch (error) {
+      console.error("Error al eliminar la nota:", error);
+      toast.error("Error al eliminar la nota");
+    }
   };
-console.log(nota)
+
+
+
+
+
+
+console.log(notes)
   return (
     <div className="p-4  bg-gray-300 h-full">
       <h2 className="mb-4 ">
@@ -139,7 +130,7 @@ console.log(nota)
             </div>
           )}
           {notes
-            .filter((note) => note.descripcion === selectedOption)
+            .filter((note) => note.categoria === selectedOption)
             .map((note, index) => (
               <div
                 key={index}
@@ -150,19 +141,17 @@ console.log(nota)
                   className="absolute top-1 right-1 text-gray-400 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteNote(index);
+                    handleDeleteNote(note.id);
                   }}
                 >
                   <FaTrash />
                 </span>
                 <p className="text-xs text-gray-400 mb-1">
-                  {note.creationDate}
+                  {formatoFecha(note.fecha)}
                 </p>
-                <h3 className="font-semibold text-lg mb-1">{note.title}</h3>
+                <h3 className="font-semibold text-lg mb-1">{note.titulo}</h3>
                 <p className="text-gray-400 overflow-hidden whitespace-nowrap">
-                  {note.content.length > 60
-                    ? note.content.slice(0, 60) + "..."
-                    : note.content}
+                  {note.descripcion}
                 </p>
               </div>
             ))}
