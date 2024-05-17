@@ -57,14 +57,16 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
     try {
       await crearNotas(nota);
       e.preventDefault();
-      emailjs.send(serviceID, emailTemplate, templateParams, publicId).then(
-        (response) => {
-          console.log("Email enviado!", response);
-        },
-        (error) => {
-          console.log("FAILED...", error.text);
-        }
-      );
+      await emailjs
+        .send(serviceID, emailTemplate, templateParams, publicId)
+        .then(
+          (response) => {
+            console.log("Email enviado!", response);
+          },
+          (error) => {
+            console.log("FAILED...", error.text);
+          }
+        );
 
       toast.success("Nota creado con éxito");
       console.log("nota creado");
@@ -74,6 +76,7 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
         categoria: "",
         fecha: new Date().toISOString(),
       });
+      window.location.reload();
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
       toast.error("Error al crear el nota");
