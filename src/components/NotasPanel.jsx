@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { crearNotas, eliminarNotas } from "../services/notasServices";
 import { toast } from "react-toastify";
 import { formatoFecha } from "../utils/utils";
-
+import emailjs from "@emailjs/browser";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
+  const form = useRef();
   const [nota, setNota] = useState({
     titulo: "",
     descripcion: "",
@@ -13,19 +15,19 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
     fecha: new Date().toISOString(),
   });
   const [showInputs, setShowInputs] = useState(false);
+  const { user, isAuthenticated } = useAuth0();
 
-console.log(selectedOption)
-console.log(new Date().toISOString())
-useEffect(()=>{
-setNota({
-  id:0,
-  titulo: "",
-    descripcion: "",
-    categoria: selectedOption,
-    fecha: new Date().toISOString(),
-})
-},[selectedOption])
-
+  console.log(selectedOption);
+  console.log(new Date().toISOString());
+  useEffect(() => {
+    setNota({
+      id: 0,
+      titulo: "",
+      descripcion: "",
+      categoria: selectedOption,
+      fecha: new Date().toISOString(),
+    });
+  }, [selectedOption]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,10 +50,30 @@ setNota({
 
     try {
       await crearNotas(nota);
-      
+
+      const serviceID = "service_mw84yzk";
+      const emailTemplate = "template_41om8n3";
+      const publicId = "RdVSXJ9drnttQH2YX";
+      const templateParams = {
+        from_name: user.name,
+        from_email: user.email,
+        to_name: "NotasAPP",
+        message: nota.titulo,
+      };
+      e.preventDefault();
+      emailjs.send(serviceID, emailTemplate, templateParams, publicId).then(
+        (response) => {
+          console.log("Email enviado!", response);
+        },
+        (error) => {
+          console.log("FAILED...", error.text);
+        }
+      );
+
       toast.success("Nota creado con éxito");
+
       console.log("nota creado");
-      window.location.reload()
+      window.location.reload();
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
       toast.error("Error al crear el nota");
@@ -70,12 +92,7 @@ setNota({
     }
   };
 
-
-
-
-
-
-console.log(notes)
+  console.log(notes);
   return (
     <div className="p-4  bg-gray-300 h-full">
       <h2 className="mb-4 ">
@@ -99,34 +116,30 @@ console.log(notes)
         <>
           {showInputs && (
             <div className="mb-4">
-              <form onSubmit={handleSubmit}
-              
-              >
+              <form onSubmit={handleSubmit} ref={form}>
                 <input
-                type="text"
-                placeholder="Título"
-                className="py-1 px-3 rounded-md mr-2 mb-2"
-                value={nota.titulo}
-                name="titulo"
-                onChange={handleChange}
-              />
-              <input
-                type="text"
-                placeholder="Contenido"
-                name="descripcion"
-                className="py-1 px-3 rounded-md mr-2 mb-2"
-                value={nota.descripcion}
-                onChange={handleChange}
-              />
-              <button
-              type="submit"
-                className="bg-gray-800 text-white py-1 px-2 rounded-md"
-                
-              >
-                Agregar Nota
-              </button>
+                  type="text"
+                  placeholder="Título"
+                  className="py-1 px-3 rounded-md mr-2 mb-2"
+                  value={nota.titulo}
+                  name="titulo"
+                  onChange={handleChange}
+                />
+                <input
+                  type="text"
+                  placeholder="Contenido"
+                  name="descripcion"
+                  className="py-1 px-3 rounded-md mr-2 mb-2"
+                  value={nota.descripcion}
+                  onChange={handleChange}
+                />
+                <button
+                  type="submit"
+                  className="bg-gray-800 text-white py-1 px-2 rounded-md"
+                >
+                  Agregar Nota
+                </button>
               </form>
-              
             </div>
           )}
           {notes
