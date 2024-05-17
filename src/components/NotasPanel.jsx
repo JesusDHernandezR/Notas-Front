@@ -16,9 +16,13 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
   });
   const [showInputs, setShowInputs] = useState(false);
   const { user, isAuthenticated } = useAuth0();
+  const templateParams = {
+    from_name: user.name,
+    from_email: user.email,
+    to_name: "NotasAPP",
+    message: nota.titulo,
+  };
 
-  console.log(selectedOption);
-  console.log(new Date().toISOString());
   useEffect(() => {
     setNota({
       id: 0,
@@ -40,7 +44,9 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    const serviceID = "service_mw84yzk";
+    const emailTemplate = "template_41om8n3";
+    const publicId = "RdVSXJ9drnttQH2YX";
     const { error } = (notes, { abortEarly: false });
 
     if (error) {
@@ -50,16 +56,6 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
 
     try {
       await crearNotas(nota);
-
-      const serviceID = "service_mw84yzk";
-      const emailTemplate = "template_41om8n3";
-      const publicId = "RdVSXJ9drnttQH2YX";
-      const templateParams = {
-        from_name: user.name,
-        from_email: user.email,
-        to_name: "NotasAPP",
-        message: nota.titulo,
-      };
       e.preventDefault();
       emailjs.send(serviceID, emailTemplate, templateParams, publicId).then(
         (response) => {
@@ -71,9 +67,13 @@ const NotesPanel = ({ selectedOption, notes, setNotes, onNoteSelect }) => {
       );
 
       toast.success("Nota creado con éxito");
-
       console.log("nota creado");
-      window.location.reload();
+      setNota({
+        titulo: "",
+        descripcion: "",
+        categoria: "",
+        fecha: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
       toast.error("Error al crear el nota");
