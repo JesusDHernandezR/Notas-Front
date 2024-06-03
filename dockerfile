@@ -1,13 +1,30 @@
-FROM node:18-alpine
-
+FROM node:16-alpine AS build
 WORKDIR /app
 
-COPY package.json .
+# Copiar el archivo package.json
+COPY package.json ./
 
+# Instalar dependencias
 RUN npm install
 
+# Copiar el código fuente del frontend
 COPY . .
 
-EXPOSE 3000
+# Construir el proyecto React
+RUN npm run build
 
-CMD [ "npm", "start"]
+# Establecer la imagen de trabajo como imagen base Nginx
+FROM nginx:latest
+
+WORKDIR /usr/share/nginx/html
+
+# Copiar los archivos estáticos generados
+COPY --from=build /app/build .
+
+# Exponer el puerto 80 
+EXPOSE 80
+
+# Servir el contenido estático con Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+CMD ["nginx", "-g", "daemon off;"]
